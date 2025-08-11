@@ -1,0 +1,174 @@
+---
+title: "statCA"
+author: "Selin"
+date: "2023-11-21"
+output: pdf_document
+---
+```{r}
+library(tidyverse)
+install.packages('ISLR')
+library(ISLR)
+install.packages('ggplot2')
+library(ggplot2)
+install.packages('caret')
+library(caret)
+install.packages('AppliedPredictiveModeling')
+library(AppliedPredictiveModeling)
+install.packages('pls')
+library(pls)
+install.packages("elasticnet")
+library(elasticnet)
+install.packages('broom')
+library(broom)
+install.packages('glmnet')
+library(glmnet)
+install.packages("MASS")
+library(MASS)
+install.packages("PerformanceAnalytics")
+library(PerformanceAnalytics)
+install.packages('Matrix')
+library(Matrix)
+install.packages('dplyr')
+library(dplyr)
+install.packages('car')
+library(car)
+install.packages('ccorplot')
+library(corrplot)
+
+```
+
+
+```{r}
+housing <- read.csv("C:/Users/selin/Downloads/housing.csv")
+df<- housing
+str(df)
+head(df)
+summary(df)#Table1
+sum(is.na(df))
+df_num <- dplyr::select(df,-c(Bldg_Type,House_Style,Overall_Cond,Exter_Cond))
+df_cat <- dplyr::select(df,c(Bldg_Type,House_Style,Overall_Cond,Exter_Cond))
+chart.Correlation(df_num, density=TRUE, pch=19)#Figure 1
+corrplot(cor(df_num), method = "number", tl.col="black")#Figure 2
+pairs(df_num)
+ggplot(df_cat,aes(Bldg_Type)) + geom_bar()#Figure3
+ggplot(df_cat,aes(House_Style)) + geom_bar()#Figure3
+ggplot(df_cat,aes(Overall_Cond)) + geom_bar()#Figure3
+ggplot(df_cat,aes(Exter_Cond)) + geom_bar()#Figure3
+
+boxplot(df$Lot_Area, main= 'Lot Area',col = 'blue')#Figure 5
+boxplot(df$Total_Bsmt_SF, main= 'Total basement area in square feet', col='orange')#Figure 5
+boxplot(df$Sale_Price, main= 'Sale Prices',col = 'pink')#Figure 5
+boxplot(df$Second_Flr_SF, main= 'Second_Flr_SF', col='purple')#Figure 5
+
+ggplot(df, aes(Sale_Price)) + geom_histogram(aes(y=..density..),fill='pink',alpha=.5) + geom_density(alpha=.20,color='black')#Figure 4
+ggplot(df, aes(Second_Flr_SF)) + geom_histogram(aes(y=..density..),fill='purple',alpha=.5) + geom_density(alpha=.5,color='black')#Figure 4
+ggplot(df, aes(Total_Bsmt_SF)) + geom_histogram(aes(y=..density..),fill='orange',alpha=.5) + geom_density(alpha=.5,color='black')#Figure 4
+ggplot(df, aes(Lot_Area)) + geom_histogram(aes(y=..density..),fill='blue',alpha=.5) + geom_density(alpha=.5,color='black')#Figure 4
+encoded <- list()
+for(i in 1:length(df_cat)) {
+    df_cat[[i]] <- as.numeric(as.factor(df_cat[[i]]))
+}
+head(df_cat)# Table 2
+cor(df_cat)# Table 3
+
+a<-which(df_num$Lot_Frontage %in% boxplot.stats(df_num$Lot_Frontage)$out)
+b<-which(df_num$Lot_Area %in% boxplot.stats(df_num$Lot_Area)$out)
+c<-which(df_num$Year_Built %in% boxplot.stats(df_num$Year_Built)$out)
+d<-which(df_num$Total_Bsmt_SF %in% boxplot.stats(df_num$Total_Bsmt_SF)$out)
+e<-which(df_num$First_Flr_SF %in% boxplot.stats(df_num$First_Flr_SF)$out)
+f<-which(df_num$Second_Flr_SF %in% boxplot.stats(df_num$Second_Flr_SF)$out)
+g<-which(df_num$Full_Bath %in% boxplot.stats(df_num$Full_Bath)$out)
+h<-which(df_num$Bedroom_AbvGr %in% boxplot.stats(df_num$Bedroom_AbvGr)$out)
+i<-which(df_num$Kitchen_AbvGr %in% boxplot.stats(df_num$Kitchen_AbvGr)$out)
+j<-which(df_num$Fireplaces %in% boxplot.stats(df_num$Fireplaces)$out)
+k<-which(df_num$Sale_Price %in% boxplot.stats(df_num$Sale_Price)$out)
+df_num[a,]$Lot_Frontage <- median(df_num$Lot_Frontage)
+df_num[b,]$Lot_Area <- mean(df_num$Lot_Area)
+df_num[d,]$Total_Bsmt_SF <- mean(df_num$Total_Bsmt_SF)
+df_num[e,]$First_Flr_SF <- mean(df_num$First_Flr_SF)
+df_num[f,]$Second_Flr_SF <- median(df_num$Second_Flr_SF)
+df_num[g,]$Full_Bath <- mean(df_num$Full_Bath)
+df_num[h,]$Bedroom_AbvGr <- mean(df_num$Bedroom_AbvGr)
+df_num[i,]$Kitchen_AbvGr <- mean(df_num$Kitchen_AbvGr)
+df_num[j,]$Fireplaces <- mean(df_num$Fireplaces)
+df_num[k,]$Sale_Price <- mean(df_num$Sale_Price)
+
+df_new<- cbind(df_num,df_cat)
+#model
+set.seed(23160373)
+train_index <- createDataPartition(df_new$Sale_Price, p=0.70, list=FALSE, time=1)
+head(train_index)
+train <- df_new[train_index,]
+test <- df_new[-train_index,]
+train_x <- train %>% dplyr :: select (-Sale_Price)
+train_y <- train$Sale_Price
+test_x <- test %>% dplyr :: select (-Sale_Price)
+test_y <- test$Sale_Price
+training<- data.frame(train_x, Sale_Price= train_y)
+lm_fit<- lm(Sale_Price~., data=training)
+summary(lm_fit)#Table 4
+
+head(training$Sale_Price)
+head(lm_fit$fitted.values)
+defaultSummary(data.frame(obs=training$Sale_Price,pred=lm_fit$fitted.values))#Table 4a
+
+summary(predict(lm_fit,train_x))
+summary(lm_fit$fitted.values)
+defaultSummary(data.frame(obs=test_y, pred=predict(lm_fit, test_x)))#Table 8
+
+lm_fit2<- lm(Sale_Price~Lot_Frontage+Lot_Area+Year_Built+Total_Bsmt_SF+First_Flr_SF+Second_Flr_SF+Bedroom_AbvGr+Kitchen_AbvGr+Fireplaces+Latitude+Bldg_Type+Overall_Cond, data=training)
+summary(lm_fit2)#Table 5
+head(training$Sale_Price)
+head(lm_fit2$fitted.values)
+defaultSummary(data.frame(obs=training$Sale_Price,pred=lm_fit2$fitted.values))#Table 5a
+
+head(predict(lm_fit2,train_x))
+head(lm_fit2$fitted.values)
+defaultSummary(data.frame(obs=test_y, pred=predict(lm_fit2, test_x)))
+# ucuncu model
+lm_fit3<- lm(Sale_Price~Lot_Frontage+Lot_Area+Year_Built+Total_Bsmt_SF+First_Flr_SF+Second_Flr_SF+Bedroom_AbvGr+Kitchen_AbvGr+Fireplaces+Latitude+Overall_Cond, data=training)
+summary(lm_fit3)#Table 6
+head(training$Sale_Price)
+head(lm_fit3$fitted.values)
+defaultSummary(data.frame(obs=training$Sale_Price,pred=lm_fit3$fitted.values))#Table 6a
+#tahmin
+head(predict(lm_fit3,train_x))
+head(lm_fit3$fitted.values)
+defaultSummary(data.frame(obs=test_y, pred=predict(lm_fit3, test_x)))
+residuals <- residuals(lm_fit)
+
+shapiro.test(resid(lm_fit))#table7a
+ncvTest(lm_fit)#table7d
+durbinWatsonTest(lm_fit)#table7c
+vif(lm_fit)#table7c
+head(cooks.distance(lm_fit))#table7b
+par(mfrow = c(2, 2)) #figure6
+plot(lm_fit)#figure6
+predicted_values <- predict(lm_fit, newdata = test)
+plot(test_y, predicted_values)#figure7
+abline(0, 1, col = "red")#figure7
+```
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r cars}
+summary(cars)
+```
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
