@@ -125,13 +125,13 @@ defaultSummary(data.frame(obs=training$Sale_Price,pred=lm_fit2$fitted.values))#T
 head(predict(lm_fit2,train_x))
 head(lm_fit2$fitted.values)
 defaultSummary(data.frame(obs=test_y, pred=predict(lm_fit2, test_x)))
-# ucuncu model
+# third model
 lm_fit3<- lm(Sale_Price~Lot_Frontage+Lot_Area+Year_Built+Total_Bsmt_SF+First_Flr_SF+Second_Flr_SF+Bedroom_AbvGr+Kitchen_AbvGr+Fireplaces+Latitude+Overall_Cond, data=training)
 summary(lm_fit3)#Table 6
 head(training$Sale_Price)
 head(lm_fit3$fitted.values)
 defaultSummary(data.frame(obs=training$Sale_Price,pred=lm_fit3$fitted.values))#Table 6a
-#tahmin
+#prediction
 head(predict(lm_fit3,train_x))
 head(lm_fit3$fitted.values)
 defaultSummary(data.frame(obs=test_y, pred=predict(lm_fit3, test_x)))
@@ -153,22 +153,3 @@ abline(0, 1, col = "red")#figure7
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-## R Markdown
-
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
-
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
-
-```{r cars}
-summary(cars)
-```
-
-## Including Plots
-
-You can also embed plots, for example:
-
-```{r pressure, echo=FALSE}
-plot(pressure)
-```
-
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
